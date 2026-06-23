@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur SEM — Tommy Dubé</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+  :root {
+    --black: #111111;
+    --white: #ffffff;
+    --gray-100: #f5f5f5;
+    --gray-200: #ebebeb;
+    --gray-300: #dddddd;
+    --gray-500: #888888;
+    --gray-700: #444444;
+    --text: #222222;
+    --border: #dddddd;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gray-100);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--black);
+    padding: 28px 32px 24px;
+    margin-bottom: 32px;
+  }
+
+  header .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 8px;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: #777;
+    max-width: 520px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin: 0 32px 28px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: var(--white);
+    border: none;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-500);
+    transition: all 0.15s;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .tab-btn:last-child { border-right: none; }
+  .tab-btn:hover { background: var(--gray-100); color: var(--black); }
+
+  .tab-btn.active {
+    background: var(--black);
+    color: var(--white);
+    font-weight: 700;
+  }
+
+  .tab-btn .tab-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+    opacity: 0.7;
+  }
+
+  /* ── PANELS ── */
+  .panel { display: none; padding: 0 32px; }
+  .panel.active { display: block; }
+
+  /* ── CALCULATOR CARD ── */
+  .calc-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .calc-header {
+    background: var(--black);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .calc-header .icon { font-size: 18px; }
+
+  .calc-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 2px;
+  }
+
+  .calc-header p {
+    font-size: 11px;
+    color: #888;
+  }
+
+  .calc-body { padding: 20px; }
+
+  /* ── FIELD GROUPS ── */
+  .field-group {
+    margin-bottom: 16px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  @media (max-width: 560px) {
+    .field-row { grid-template-columns: 1fr; }
+    .tabs { margin: 0 16px 20px; }
+    .panel { padding: 0 16px; }
+    header { padding: 20px 16px; }
+    header h1 { font-size: 20px; }
+  }
+
+  label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 6px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap .prefix,
+  .input-wrap .suffix {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--gray-500);
+    pointer-events: none;
+  }
+
+  .input-wrap .prefix { left: 12px; }
+  .input-wrap .suffix { right: 12px; }
+
+  input[type="number"] {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--black);
+    background: var(--white);
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--black);
+  }
+
+  .has-prefix input { padding-left: 28px; }
+  .has-suffix input { padding-right: 34px; }
+
+  /* ── SLIDER ── */
+  .slider-group { margin-bottom: 16px; }
+
+  .slider-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .slider-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--black);
+    background: var(--gray-100);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    background: var(--gray-200);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--black);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .slider-hints {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--gray-500);
+  }
+
+  /* ── RESULTS ── */
+  .results {
+    background: var(--black);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-top: 18px;
+  }
+
+  .results-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 14px;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 400px) { .result-grid { grid-template-columns: 1fr; } }
+
+  .result-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  .result-item.highlight {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    grid-column: 1 / -1;
+  }
+
+  .result-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .result-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  .result-value.big { font-size: 32px; }
+
+  .result-note {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ── INTERPRETATION ── */
+  .interp {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    border-left: 2px solid #444;
+  }
+
+  .interp p {
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.7;
+  }
+
+  .interp strong { color: var(--white); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 18px 0;
+  }
+
+  /* ── PROFILE SELECTOR ── */
+  .profile-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .profile-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--white);
+    font-size: 12px;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .profile-btn:hover { border-color: var(--black); color: var(--black); }
+  .profile-btn.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* ── SCENARIO TABLE ── */
+  .scenario-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 14px;
+  }
+
+  .scenario-table th {
+    background: var(--gray-100);
+    padding: 8px 12px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .scenario-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    color: var(--gray-700);
+    vertical-align: middle;
+  }
+
+  .scenario-table tr:last-child td { border-bottom: none; }
+  .scenario-table tr.recommended td { background: #f8f8f8; font-weight: 600; color: var(--black); }
+  .scenario-table tr.recommended td:first-child::after { content: ' ✓'; color: var(--black); }
+
+  /* ── WARN ── */
+  .calc-warn {
+    background: #fff8f5;
+    border: 1px solid #f0d8cc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">// Outil de calcul · SEM Senior</div>
+  <h1>Calculateur SEM<br>Tommy Dubé</h1>
+  <p>CPA max, ROAS cible, CPL B2B, validation de budget — tout en un. Entres les chiffres du client, les résultats s'affichent instantanément.</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('cpa')">
+    <span class="tab-label">Objectif</span>CPA Max
+  </button>
+  <button class="tab-btn" onclick="switchTab('roas')">
+    <span class="tab-label">Objectif</span>ROAS Cible
+  </button>
+  <button class="tab-btn" onclick="switchTab('cpl')">
+    <span class="tab-label">B2B</span>CPL Max
+  </button>
+  <button class="tab-btn" onclick="switchTab('budget')">
+    <span class="tab-label">Validation</span>Budget
+  </button>
+</div>
+
+<!-- ═══════════════════════ CPA ═══════════════════════ -->
+<div class="panel active" id="panel-cpa">
+  <div class="calc-card">
+    <div class="calc-header">
+      <span class="icon">🎯</span>
+      <div>
+        <h2>Calculateur CPA max</h2>
+        <p>Pour les services et produits à valeur homogène — cours, abonnements, billets, consultations</p>
+      </div>
+    </div>
+    <div class="calc-body">
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Prix de vente moyen</label>
+          <div class="input-wrap has-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="cpa-price" value="200" min="1" oninput="calcCPA()">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Marge brute</label>
+          <div class="input-wrap has-suffix">
+            <input type="number" id="cpa-margin" value="50" min="1" max="100" oninput="calcCPA()">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label style="margin:0">% d'acquisition acceptable</label>
+          <span class="slider-value" id="cpa-pct-display">40%</span>
+        </div>
+        <input type="range" id="cpa-pct" min="10" max="70" value="40" oninput="calcCPA(); document.getElementById('cpa-pct-display').textContent=this.value+'%'">
+        <div class="slider-hints">
+          <span>Conservateur (10–25%)</span>
+          <span>Normal (35–45%)</span>
+          <span>Agressif (50–70%)</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <label style="margin-bottom:8px; display:block;">Profil rapide</label>
+      <div class="profile-selector">
+        <button class="profile-btn" onclick="setProfile('cpa',20)">Prudent — 20%</button>
+        <button class="profile-btn active" onclick="setProfile('cpa',40)">Croissance — 40%</button>
+        <button class="profile-btn" onclick="setProfile('cpa',55)">Agressif — 55%</button>
+      </div>
+
+      <div class="results" id="cpa-results">
+        <div class="results-title">// Résultats</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Marge brute en $</div>
+            <div class="result-value" id="cpa-margin-dollars">100$</div>
+            <div class="result-note">Ce qui reste après les coûts directs</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">% acquisition choisi</div>
+            <div class="result-value" id="cpa-pct-result">40%</div>
+            <div class="result-note">Portion donnée à Google</div>
+          </div>
+          <div class="result-item highlight">
+            <div class="result-label">CPA max — à entrer dans Google Ads</div>
+            <div class="result-value big" id="cpa-max">40$</div>
+            <div class="result-note" id="cpa-note">En dessous = tu fais de l'argent. Au-dessus = tu perds de l'argent.</div>
+          </div>
+        </div>
+        <div class="interp">
+          <p id="cpa-interp">Si Google amène un client pour <strong>40$</strong>, il te reste <strong>60$</strong> de marge brute pour couvrir tes frais fixes et faire du profit.</p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Scénarios comparatifs à présenter au client</h3>
+      <table class="scenario-table" id="cpa-scenarios"></table>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ROAS ═══════════════════════ -->
+<div class="panel" id="panel-roas">
+  <div class="calc-card">
+    <div class="calc-header">
+      <span class="icon">🛒</span>
+      <div>
+        <h2>Calculateur ROAS cible</h2>
+        <p>Pour l'e-commerce avec valeurs de commandes variables</p>
+      </div>
+    </div>
+    <div class="calc-body">
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Marge brute</label>
+          <div class="input-wrap has-suffix">
+            <input type="number" id="roas-margin" value="40" min="1" max="100" oninput="calcROAS()">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Budget mensuel (pour simulation)</label>
+          <div class="input-wrap has-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="roas-budget" value="1000" min="1" oninput="calcROAS()">
+          </div>
+        </div>
+      </div>
+
+      <div class="results" id="roas-results">
+        <div class="results-title">// Résultats</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">ROAS minimum (point mort)</div>
+            <div class="result-value" id="roas-min">2.5×</div>
+            <div class="result-note">En dessous = perte d'argent</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">ROAS cible recommandé</div>
+            <div class="result-value" id="roas-target">4.0×</div>
+            <div class="result-note">Minimum × 1.6</div>
+          </div>
+          <div class="result-item highlight">
+            <div class="result-label">tROAS à entrer dans Google Ads</div>
+            <div class="result-value big" id="roas-google">400%</div>
+            <div class="result-note">ROAS cible × 100</div>
+          </div>
+        </div>
+        <div class="interp">
+          <p id="roas-interp">Loading...</p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Tableau de validation — ce que ça donne avec <span id="roas-budget-label">1 000$</span> de budget</h3>
+      <table class="scenario-table" id="roas-scenarios"></table>
+
+      <div class="calc-warn">
+        <span>⚠</span>
+        <span>Plus le ROAS cible est élevé, moins Google trouve de clients. Si le compte ne livre pas le ROAS demandé, il coupe la diffusion. Toujours ancrer la cible dans ce que le compte prouve pouvoir livrer — et ajuster par paliers de 15% maximum.</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CPL ═══════════════════════ -->
+<div class="panel" id="panel-cpl">
+  <div class="calc-card">
+    <div class="calc-header">
+      <span class="icon">📋</span>
+      <div>
+        <h2>Calculateur CPL max — B2B</h2>
+        <p>Pour les leads qualifiés dont la conversion finale est hors ligne</p>
+      </div>
+    </div>
+    <div class="calc-body">
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Valeur moyenne du contrat</label>
+          <div class="input-wrap has-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="cpl-contract" value="10000" min="1" oninput="calcCPL()">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Marge brute</label>
+          <div class="input-wrap has-suffix">
+            <input type="number" id="cpl-margin" value="50" min="1" max="100" oninput="calcCPL()">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label style="margin:0">Taux de fermeture</label>
+          <span class="slider-value" id="cpl-close-display">20%</span>
+        </div>
+        <input type="range" id="cpl-close" min="5" max="50" value="20" oninput="calcCPL(); document.getElementById('cpl-close-display').textContent=this.value+'%'">
+        <div class="slider-hints">
+          <span>Faible (5–10%)</span>
+          <span>Moyen (15–25%)</span>
+          <span>Élevé (35–50%)</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label style="margin:0">% d'acquisition acceptable</label>
+          <span class="slider-value" id="cpl-pct-display">10%</span>
+        </div>
+        <input type="range" id="cpl-pct" min="5" max="40" value="10" oninput="calcCPL(); document.getElementById('cpl-pct-display').textContent=this.value+'%'">
+        <div class="slider-hints">
+          <span>Conservateur B2B (5–10%)</span>
+          <span>Normal (15–20%)</span>
+          <span>Agressif (30–40%)</span>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="results-title">// Résultats</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Marge brute en $</div>
+            <div class="result-value" id="cpl-margin-dollars">5 000$</div>
+            <div class="result-note">Par contrat signé</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Valeur réelle d'un lead</div>
+            <div class="result-value" id="cpl-lead-value">1 000$</div>
+            <div class="result-note">Marge × taux de fermeture</div>
+          </div>
+          <div class="result-item highlight">
+            <div class="result-label">CPL max — à entrer dans Google Ads</div>
+            <div class="result-value big" id="cpl-max">100$</div>
+            <div class="result-note" id="cpl-note"></div>
+          </div>
+        </div>
+        <div class="interp">
+          <p id="cpl-interp">Loading...</p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Impact du taux de fermeture sur le CPL max</h3>
+      <table class="scenario-table" id="cpl-scenarios"></table>
+
+      <div class="calc-warn">
+        <span>⚠</span>
+        <span>Si le client ne connaît pas son taux de fermeture, utilise 15% comme hypothèse conservatrice pour le B2B équipement/services. Documente cette hypothèse par email avant de lancer.</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ BUDGET ═══════════════════════ -->
+<div class="panel" id="panel-budget">
+  <div class="calc-card">
+    <div class="calc-header">
+      <span class="icon">💰</span>
+      <div>
+        <h2>Validation de budget</h2>
+        <p>Valider ou challenger le budget proposé par le client</p>
+      </div>
+    </div>
+    <div class="calc-body">
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>CPA / CPL cible</label>
+          <div class="input-wrap has-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="bud-cpa" value="40" min="1" oninput="calcBudget()">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Conversions / leads visés par mois</label>
+          <div class="input-wrap">
+            <input type="number" id="bud-volume" value="20" min="1" oninput="calcBudget()">
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Budget offert par le client</label>
+        <div class="input-wrap has-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="bud-client" value="2000" min="1" oninput="calcBudget()">
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="results-title">// Résultats</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Budget minimum requis</div>
+            <div class="result-value" id="bud-min">800$</div>
+            <div class="result-note">CPA × conversions visées</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Budget offert</div>
+            <div class="result-value" id="bud-offered">2 000$</div>
+            <div class="result-note">Proposé par le client</div>
+          </div>
+          <div class="result-item highlight">
+            <div class="result-label">Verdict</div>
+            <div class="result-value" id="bud-verdict" style="font-size:18px;">✓ Suffisant</div>
+            <div class="result-note" id="bud-gap"></div>
+          </div>
+        </div>
+        <div class="interp">
+          <p id="bud-interp">Loading...</p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Volume atteignable avec le budget du client</h3>
+      <table class="scenario-table" id="bud-scenarios"></table>
+
+      <div class="calc-warn" style="margin-top:14px;">
+        <span>💡</span>
+        <span>Règle Smart Bidding : il faut 30 à 50 conversions par mois minimum pour activer tCPA ou tROAS. Si le budget ne permet pas ce volume, rester en Manuel CPC ou Maximize Conversions jusqu'à l'atteindre.</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── UTILS ──
+const fmt = (n) => {
+  if (n >= 1000) return Math.round(n).toLocaleString('fr-CA') + '$';
+  return Math.round(n * 10) / 10 + '$';
+};
+const fmtN = (n) => Math.round(n * 10) / 10;
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  event.target.closest('.tab-btn').classList.add('active');
+}
+
+// ── PROFILE BUTTONS ──
+function setProfile(type, pct) {
+  if (type === 'cpa') {
+    document.getElementById('cpa-pct').value = pct;
+    document.getElementById('cpa-pct-display').textContent = pct + '%';
+    document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    calcCPA();
+  }
+}
+
+// ── CPA CALCULATOR ──
+function calcCPA() {
+  const price = parseFloat(document.getElementById('cpa-price').value) || 0;
+  const margin = parseFloat(document.getElementById('cpa-margin').value) || 0;
+  const pct = parseFloat(document.getElementById('cpa-pct').value) || 0;
+
+  const marginDollars = price * (margin / 100);
+  const cpaMax = marginDollars * (pct / 100);
+  const remaining = marginDollars - cpaMax;
+
+  document.getElementById('cpa-margin-dollars').textContent = fmt(marginDollars);
+  document.getElementById('cpa-pct-result').textContent = pct + '%';
+  document.getElementById('cpa-max').textContent = fmt(cpaMax);
+  document.getElementById('cpa-interp').innerHTML =
+    `Si Google amène un client pour <strong>${fmt(cpaMax)}</strong>, il reste <strong>${fmt(remaining)}</strong> de marge brute pour les frais fixes et le profit.`;
+
+  // Scenarios
+  const profiles = [
+    { label: 'Prudent', pct: 20 },
+    { label: 'Croissance', pct: 40 },
+    { label: 'Agressif', pct: 55 },
+  ];
+  let html = '<tr><th>Profil</th><th>% acquisition</th><th>CPA max</th><th>Il reste</th><th>Recommandé ?</th></tr>';
+  profiles.forEach(p => {
+    const cpa = marginDollars * (p.pct / 100);
+    const rem = marginDollars - cpa;
+    const isRec = p.pct === 40;
+    html += `<tr class="${isRec ? 'recommended' : ''}">
+      <td>${p.label}</td>
+      <td>${p.pct}%</td>
+      <td>${fmt(cpa)}</td>
+      <td>${fmt(rem)}</td>
+      <td>${isRec ? 'Par défaut' : '—'}</td>
+    </tr>`;
+  });
+  document.getElementById('cpa-scenarios').innerHTML = html;
+}
+
+// ── ROAS CALCULATOR ──
+function calcROAS() {
+  const margin = parseFloat(document.getElementById('roas-margin').value) || 0;
+  const budget = parseFloat(document.getElementById('roas-budget').value) || 0;
+
+  const roasMin = margin > 0 ? 1 / (margin / 100) : 0;
+  const roasTarget = roasMin * 1.6;
+  const tROAS = Math.round(roasTarget * 100);
+
+  document.getElementById('roas-min').textContent = fmtN(roasMin) + '×';
+  document.getElementById('roas-target').textContent = fmtN(roasTarget) + '×';
+  document.getElementById('roas-google').textContent = tROAS + '%';
+  document.getElementById('roas-budget-label').textContent = fmt(budget).replace('$','') + '$';
+
+  document.getElementById('roas-interp').innerHTML =
+    `Avec une marge de <strong>${margin}%</strong>, chaque dollar dépensé doit rapporter au minimum <strong>${fmtN(roasMin)}$</strong> en ventes pour couvrir les coûts de pub. On vise <strong>${fmtN(roasTarget)}$</strong> pour faire du vrai profit.`;
+
+  // Scenarios
+  const roas_vals = [roasMin, roasTarget, roasTarget * 1.25];
+  const labels = ['Minimum (survie)', 'Cible recommandée', 'Ambitieux'];
+  let html = '<tr><th>Scénario</th><th>ROAS</th><th>tROAS Google Ads</th><th>Ventes générées</th><th>Marge brute</th><th>Profit après pub</th></tr>';
+  roas_vals.forEach((r, i) => {
+    const sales = budget * r;
+    const gross = sales * (margin / 100);
+    const profit = gross - budget;
+    const isRec = i === 1;
+    html += `<tr class="${isRec ? 'recommended' : ''}">
+      <td>${labels[i]}</td>
+      <td>${fmtN(r)}×</td>
+      <td>${Math.round(r * 100)}%</td>
+      <td>${fmt(sales)}</td>
+      <td>${fmt(gross)}</td>
+      <td>${fmt(profit)}</td>
+    </tr>`;
+  });
+  document.getElementById('roas-scenarios').innerHTML = html;
+}
+
+// ── CPL CALCULATOR ──
+function calcCPL() {
+  const contract = parseFloat(document.getElementById('cpl-contract').value) || 0;
+  const margin = parseFloat(document.getElementById('cpl-margin').value) || 0;
+  const close = parseFloat(document.getElementById('cpl-close').value) || 0;
+  const pct = parseFloat(document.getElementById('cpl-pct').value) || 0;
+
+  const marginDollars = contract * (margin / 100);
+  const leadValue = marginDollars * (close / 100);
+  const cplMax = leadValue * (pct / 100);
+
+  document.getElementById('cpl-margin-dollars').textContent = fmt(marginDollars);
+  document.getElementById('cpl-lead-value').textContent = fmt(leadValue);
+  document.getElementById('cpl-max').textContent = fmt(cplMax);
+  document.getElementById('cpl-note').textContent =
+    `Sur ${Math.round(100/close)} leads à ce prix, 1 contrat signé = ${fmt(marginDollars)} de marge`;
+  document.getElementById('cpl-interp').innerHTML =
+    `Chaque formulaire rempli vaut en moyenne <strong>${fmt(leadValue)}</strong> si le taux de fermeture reste à ${close}%. Tu peux payer jusqu'à <strong>${fmt(cplMax)}</strong> à Google pour aller chercher ce lead.`;
+
+  // Scenarios - impact du taux de fermeture
+  const closes = [10, 15, 20, 30];
+  let html = '<tr><th>Taux de fermeture</th><th>Valeur / lead</th><th>CPL max</th><th>Leads pour 1 contrat</th></tr>';
+  closes.forEach(c => {
+    const lv = marginDollars * (c / 100);
+    const cpl = lv * (pct / 100);
+    const isRec = c == close;
+    html += `<tr class="${isRec ? 'recommended' : ''}">
+      <td>${c}%</td>
+      <td>${fmt(lv)}</td>
+      <td>${fmt(cpl)}</td>
+      <td>${Math.ceil(100/c)} leads</td>
+    </tr>`;
+  });
+  document.getElementById('cpl-scenarios').innerHTML = html;
+}
+
+// ── BUDGET CALCULATOR ──
+function calcBudget() {
+  const cpa = parseFloat(document.getElementById('bud-cpa').value) || 0;
+  const volume = parseFloat(document.getElementById('bud-volume').value) || 0;
+  const client = parseFloat(document.getElementById('bud-client').value) || 0;
+
+  const budgetMin = cpa * volume;
+  const gap = client - budgetMin;
+  const volumeAchievable = Math.floor(client / cpa);
+  const isOk = client >= budgetMin;
+
+  document.getElementById('bud-min').textContent = fmt(budgetMin);
+  document.getElementById('bud-offered').textContent = fmt(client);
+
+  if (isOk) {
+    document.getElementById('bud-verdict').textContent = '✓ Suffisant';
+    document.getElementById('bud-verdict').style.color = '#fff';
+    document.getElementById('bud-gap').textContent = `Marge de ${fmt(gap)} — possibilité d'ajouter des campagnes`;
+    document.getElementById('bud-interp').innerHTML =
+      `Budget suffisant pour atteindre <strong>${volume} conversions/mois</strong> à <strong>${fmt(cpa)}</strong> chacune. Il reste <strong>${fmt(gap)}</strong> pour ajouter PMax, RLSA, ou remarketing.`;
+  } else {
+    document.getElementById('bud-verdict').textContent = '✗ Insuffisant';
+    document.getElementById('bud-verdict').style.color = '#ff8888';
+    document.getElementById('bud-gap').textContent = `Il manque ${fmt(Math.abs(gap))} pour atteindre l'objectif`;
+    document.getElementById('bud-interp').innerHTML =
+      `Le budget permet seulement <strong>${volumeAchievable} conversions/mois</strong> au lieu de ${volume}. Proposer : augmenter à <strong>${fmt(budgetMin)}</strong> OU réduire l'objectif à <strong>${volumeAchievable} conversions</strong>.`;
+  }
+
+  // Scenarios
+  const cpas = [cpa * 0.8, cpa, cpa * 1.2];
+  const cpaLabels = ['CPA optimiste (−20%)', `CPA cible (${fmt(cpa)})`, 'CPA pessimiste (+20%)'];
+  let html = '<tr><th>Scénario CPA</th><th>CPA estimé</th><th>Volume avec budget client</th><th>Budget pour objectif initial</th></tr>';
+  cpas.forEach((c, i) => {
+    const vol = Math.floor(client / c);
+    const budNeeded = c * volume;
+    const isRec = i === 1;
+    html += `<tr class="${isRec ? 'recommended' : ''}">
+      <td>${cpaLabels[i]}</td>
+      <td>${fmt(c)}</td>
+      <td>${vol} conversions</td>
+      <td>${fmt(budNeeded)}</td>
+    </tr>`;
+  });
+  document.getElementById('bud-scenarios').innerHTML = html;
+}
+
+// Init
+calcCPA();
+calcROAS();
+calcCPL();
+calcBudget();
+</script>
+</body>
+</html>
